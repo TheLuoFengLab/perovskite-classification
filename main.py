@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split, cross_val_score, Stratifie
 # Author: Fei Ding, feid@g.clemson.edu
 # Usage: python main.py -step 0.05 -As Ba -Bs Ti,Ce,Zr,Y,Yb
 
+
 class Compound:
     """Define a compound using data from a txt file."""
     def __init__(self, As, Bs, step = 0.05):
@@ -26,38 +27,36 @@ class Compound:
             r'$r_{B\_min}/r_O$', r'$r_{A\_max}/r_{A\_min}$', r'$r_{B\_max}/r_{B\_min}$',  r'$\sigma^2(A)$', \
             r'$\sigma^2(B)$', r'$r_A/r_O$', r'$r_B/r_O$', 't', r'$(O_A + O_B)/6$', r'$\tau$']
         
-        self.site_A_dict, self.site_B_dict = self.read_parameters(parameter_file, default_opt) 
+        self.site_A_dict, self.site_B_dict = self.read_parameters(parameter_file, default_opt)
 
-        negative_samples = read_excel('./data/negative_samples.xlsx', sheet_name='Sheet1')
-        negative_samples = negative_samples.drop(columns=['_chemical_formula_']).values
+        codes = {'negative':0, 'positive':1}
+        data_set =  read_excel('./data/Fractional_Perovsktie_Oxides_Data.xlsx', sheet_name='Dataset')
+        data_set.insert(0, 'label', data_set['True label'].map(codes))
+        print(data_set['True label'].value_counts())
+        data_set = data_set.drop(columns=['Chemical Compositions', 'True label']).values
 
-        positive_samples = read_excel('./data/positive_samples.xlsx', sheet_name='Sheet1')
-        positive_samples = positive_samples.drop(columns=['_chemical_formula_']).values
-
-        exp_samples = read_excel('./data/exp_samples.xlsx', sheet_name='Sheet1')
+        exp_samples =  read_excel('./data/Fractional_Perovsktie_Oxides_Data.xlsx', sheet_name='Experimental data')
+        exp_samples.insert(0, 'label', exp_samples['True label'].map(codes))
         exp_label = exp_samples[['label']].values
-        exp_samples = exp_samples.drop(columns=['_chemical_formula_']).values
+        exp_samples = exp_samples.drop(columns=['Chemical Compositions', 'True label']).values
 
-        print('negative samples: ', negative_samples.shape[0])
-        print('positive samples: ', positive_samples.shape[0]) 
-        
         gen_data = self.generate_compunds(As, Bs, step)
         gen_samples = self.combine_samples(gen_data)
         self.gen_samples_all = copy.deepcopy(gen_samples[:, 1:])
         self.gen_samples_all = np.round(self.gen_samples_all, 6)
 
         ##############################################
-        # remove features
+        # choose top 5 features
         remove_list = [0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 20]  #top5
         rm_list = [i + 1 for i in remove_list] #y is at the beginning
         idxs = [i for i in range(0, 22) if i not in rm_list]
-        negative_samples = negative_samples[:, idxs]
-        positive_samples = positive_samples[:, idxs]
+        data_set = data_set[:, idxs]
         exp_samples = exp_samples[:, idxs]
         gen_samples = gen_samples[:, idxs]
         ##############################################        
         
-        self.compounds = np.concatenate((negative_samples, positive_samples), axis=0)
+        #self.compounds = np.concatenate((negative_samples, positive_samples), axis=0)
+        self.compounds = data_set
         self.experimental_samples = exp_samples[:, 1:] 
         self.experimental_labels = np.squeeze(exp_label)
         self.gen_samples = gen_samples[:, 1:]
@@ -92,9 +91,7 @@ class Compound:
         As_fraction = [As + "," + item for item in As_perm]
         Bs_fraction = [Bs + "," + item for item in Bs_perm]
         permutations = [[a,b] for a in As_fraction for b in Bs_fraction]
-
         return permutations
-    
     
     def read_parameters(self, parameter_file, default_opt=True):
         site_A_1 = read_excel(parameter_file, sheet_name='A site-CN=12').iloc[:42]
@@ -124,7 +121,6 @@ class Compound:
         
         return site_A_dict, site_B_dict
             
-
     def combine_samples(self, site_list, label = 2):
         sample_list = []
         for i, (A, B) in enumerate(site_list):
@@ -164,7 +160,6 @@ class Compound:
         sample_list = sample_list[~np.isnan(sample_list).any(axis=1)]        
         return sample_list
 
-
     def calculate_features(self, pair_list, is_A=True):
         element_list = [e for (e, f) in pair_list]
         fraction_list =  [float(f) for (e, f) in pair_list]
@@ -190,7 +185,6 @@ class Compound:
         features = np.concatenate((features, np.array([radius_max, radius_min, radius_max_min, variance])))
         return features
 
-        
 parser = argparse.ArgumentParser(description='Compound data',
         formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-step', help='The step of fraction', type=float, default=0.05)
@@ -216,7 +210,6 @@ if __name__ == '__main__':
     print(y_predict) 
     assert len(y_true) == len(y_predict), "Oh no! This assertion failed!"   
     print('correct: ', len([i for i, j in zip(y_predict, y_true) if i == j]), 'total: ', len(y_true))
-    
 
     gen_prediction = GBDT.predict(compound.gen_samples)
     gen_all = np.concatenate([compound.gen_data, np.expand_dims(gen_prediction, axis=1), compound.gen_samples_all], 
