@@ -10,6 +10,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, f1_score
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
+#import matplotlib.pyplot as plt
+#import seaborn as sns
 
 # Author: Fei Ding, feid@g.clemson.edu
 # Usage: python main.py -step 0.05 -As Ba -Bs Ti,Ce,Zr,Y,Yb
@@ -44,6 +46,8 @@ class Compound:
         gen_samples = self.combine_samples(gen_data)
         self.gen_samples_all = copy.deepcopy(gen_samples[:, 1:])
         self.gen_samples_all = np.round(self.gen_samples_all, 6)
+
+        #self.plot_correlations(data_set[:, 1:], data_set[:, 0])
 
         ##############################################
         # choose top 5 features
@@ -184,6 +188,19 @@ class Compound:
         variance = sum(variance) - features[1]**2
         features = np.concatenate((features, np.array([radius_max, radius_min, radius_max_min, variance])))
         return features
+
+    def plot_correlations(self, train_X, train_y):
+        train_data = np.concatenate((train_X, np.expand_dims(train_y, axis=1)), axis=1)
+        train_pd = pd.DataFrame(train_data)
+        train_pd.columns = self.feature_name + ['y']
+        # correlations
+        corrMatrix = train_pd.corr()
+        #Using Pearson Correlation
+        #sns.set_style("whitegrid")
+        #sns.set(font_scale=2) 
+        plt.figure(figsize=(12,10))
+        sns.heatmap(corrMatrix, annot=True, cmap=plt.cm.Reds, fmt='.2f')
+        plt.savefig("./data/pearson_correlation_matrix.png", dpi=300)        
 
 parser = argparse.ArgumentParser(description='Compound data',
         formatter_class=argparse.RawTextHelpFormatter)
