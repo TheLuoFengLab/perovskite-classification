@@ -1,5 +1,10 @@
 
-# The classification for Fractional Perovskite Oxides
+# Predicting the formation of fractionally doped perovskite oxides
+
+The **official source code** for our paper, *including the prediction of new compounds using trained model*: 
+
+Zhai, X., Ding, F., Zhao, Z. et al. Predicting the formation of fractionally doped perovskite oxides by a function-confined machine learning method. Commun Mater 3, 42 (2022). https://doi.org/10.1038/s43246-022-00269-9
+
 
 ### Project structure
 
@@ -26,7 +31,7 @@
 - pandas==1.3.5
 - scikit-learn==0.24.2
 
-### Train and test
+### Train and Predict
 
 ```
 git clone https://github.com/TheLuoFengLab/perovskite-classification.git
@@ -51,3 +56,9 @@ Ba 1.0, Ti 0.05 Ce 0.05 Zr 0.3 Y 0.1 Yb 0.5,   Positive
 ...
 
 ```
+
+### Cite our paper
+
+If you find this code useful in your research, please consider citing our paper:
+
+Zhai, X., Ding, F., Zhao, Z. et al. Predicting the formation of fractionally doped perovskite oxides by a function-confined machine learning method. Commun Mater 3, 42 (2022). https://doi.org/10.1038/s43246-022-00269-9
